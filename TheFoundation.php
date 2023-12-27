@@ -13,11 +13,21 @@ spl_autoload_register(function(string $classname) {
 /**
  * 
  */
-function jump(string $filename, bool $assoc = JSON_OBJECT_AS_ARRAY): object|array {
+function load(string $filename, bool $assoc = JSON_OBJECT_AS_ARRAY): object|array {
 	if (str_ends_with($filename, '.json'))
-		return json_decode(file_get_contents(sprintf('%s/schema/%s', APPLICATION_PATH, $filename)), $assoc, 512, JSON_THROW_ON_ERROR);
+		return json_decode(file_get_contents(sprintf('%s/statics/%s', APPLICATION_PATH, $filename)), $assoc, 512, JSON_THROW_ON_ERROR);
 	elseif (str_ends_with($filename, '.php'))
-		return require(sprintf('%s/schema/%s', APPLICATION_PATH, $filename));
+		return require sprintf('%s/statics/%s', APPLICATION_PATH, $filename);
+}
+
+/**
+ * 
+ */
+function snippet(string $filename) {
+	foreach(array_slice(func_get_args(), 1) as $zipped)
+		extract((array) $zipped);
+
+	return require sprintf('%s/templates/.snippets/%s', APPLICATION_PATH, $filename);
 }
 
 /**
