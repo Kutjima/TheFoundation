@@ -23,9 +23,9 @@ function load(string $filename, bool $assoc = JSON_OBJECT_AS_ARRAY): object|arra
 /**
  * 
  */
-function snippet(string $filename) {
-	foreach(array_slice(func_get_args(), 1) as $zipped)
-		extract((array) $zipped);
+function snippet(string $filename, array ...$args) {
+	foreach ($args as $arg)
+		extract($arg);
 
 	return require sprintf('%s/templates/.snippets/%s', APPLICATION_PATH, $filename);
 }
