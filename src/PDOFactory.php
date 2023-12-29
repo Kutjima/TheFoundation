@@ -80,7 +80,7 @@ class PDOFactory {
      * 
      */
     public static function SQLite(string $database, array $options = []): \PDO {
-        $PDO = new \PDO('sqlite:' . $database, '', '', array_replace([
+        $PDO = new \PDO(sprintf('sqlite:%s/persistences/%s', APPLICATION_PATH, $database), '', '', array_replace([
             \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_OBJ,
             \PDO::ATTR_EMULATE_PREPARES => true,
             \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,

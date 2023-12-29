@@ -1,10 +1,16 @@
 <?php
 
 /**
+ * 
+ */
+if (!defined('APPLICATION_PATH'))
+	define('APPLICATION_PATH', sprintf('%s/application', dirname($_SERVER['SCRIPT_FILENAME'])));
+
+/**
 *
 */
 spl_autoload_register(function(string $classname) {
-    if (file_exists($filename = APPLICATION_PATH . 'packages/' . str_replace('\\', '/', $classname) . '.php'))
+    if (file_exists($filename = sprintf('%s/models/%s.php', APPLICATION_PATH, str_replace('\\', '/', $classname))))
         return require_once $filename;
 
     return false;
@@ -15,19 +21,26 @@ spl_autoload_register(function(string $classname) {
  */
 function load(string $filename, bool $assoc = JSON_OBJECT_AS_ARRAY): object|array {
 	if (str_ends_with($filename, '.json'))
-		return json_decode(file_get_contents(sprintf('%s/statics/%s', APPLICATION_PATH, $filename)), $assoc, 512, JSON_THROW_ON_ERROR);
+		return json_decode(file_get_contents(sprintf('%s/persistences/%s', APPLICATION_PATH, $filename)), $assoc, 512, JSON_THROW_ON_ERROR);
 	elseif (str_ends_with($filename, '.php'))
-		return require sprintf('%s/statics/%s', APPLICATION_PATH, $filename);
+		return require sprintf('%s/persistences/%s', APPLICATION_PATH, $filename);
+
+	return [];
 }
 
 /**
  * 
  */
 function snippet(string $filename, array ...$args) {
+	$backoffice = null;
+
+	if (str_contains(debug_backtrace()[0]['file'], '.backoffice'))
+		$backoffice = '.backoffice';
+
 	foreach ($args as $arg)
 		extract($arg);
 
-	return require sprintf('%s/templates/.snippets/%s', APPLICATION_PATH, $filename);
+	require sprintf('%s/htdocs/%s/.snippets/%s', APPLICATION_PATH, $backoffice, $filename);
 }
 
 /**
