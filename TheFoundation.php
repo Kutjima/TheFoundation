@@ -32,7 +32,7 @@ function load(string $filename, bool $assoc = JSON_OBJECT_AS_ARRAY): object|arra
  * 
  */
 function snippet(string $filename, array ...$args) {
-	$backoffice = null;
+	$backoffice = '.';
 
 	if (str_contains(debug_backtrace()[0]['file'], '.backoffice'))
 		$backoffice = '.backoffice';
