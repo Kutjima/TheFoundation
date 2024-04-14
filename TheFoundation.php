@@ -49,6 +49,8 @@ function snippet(string $filename, array ...$args) {
 foreach([
 	__DIR__ . '/src/RouterHttp.php',
 	__DIR__ . '/src/RouterHttp/Response.php',
+	__DIR__ . '/src/RouterHttp/Response/Template/Form.php',
+	__DIR__ . '/src/RouterHttp/Response/Template/Table.php',
 	__DIR__ . '/src/RouterHttp/Response/Template.php',
 	__DIR__ . '/src/Request.php',
 	__DIR__ . '/src/PDOFactory.php',
