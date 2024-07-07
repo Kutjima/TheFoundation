@@ -8,12 +8,13 @@ namespace TheFoundation\RouterHttp\Response\Template;
 /**
  * 
  */
-class Form extends \ArrayObject {
+class Form {
 
     /**
      * 
      */
     protected $values = [];
+    protected $elements = [];
     protected $attributes = [];
 
     /**
@@ -33,37 +34,33 @@ class Form extends \ArrayObject {
         return $this->build();
     }
 
-    /**
-     * 
-     */
-    public function offsetSet(mixed $key, mixed $value) {
-        if (!$value instanceof Form\Element)
-            throw new \InvalidArgumentException('Value must be an instance of "Form\Element"');
-
-        if ($value instanceof Form\PayloadElement)
-            $this->values[$value->getName()] = $value->getValue();
-
-        if ($value instanceof Form\Fieldset || $value instanceof Form\Inline) {
-            foreach ($value->children() as $element)
-                if ($element instanceof Form\PayloadElement)
-                    $this->values[$element->getName()] = $element->getValue();
-        }
-        
-        return parent::offsetSet($key, $value);
-    }
-
     /**'
      * 
      */
-    public function add(Form\Element $value): void {
-        $this[] = $value;
+    public function add(Form\Element $element): self {
+        if (!$element instanceof Form\Element)
+            throw new \InvalidArgumentException('Value must be an instance of "Form\Element"');
+        
+        $name = random_bytes(20);
+
+        if ($element instanceof Form\Payload)
+            $this->values[$name = $element->getName()] = $element->getValue();
+        else if ($element instanceof Form\Fieldset || $element instanceof Form\Inline) {            
+            foreach ($element->children() as $child_element)
+                if ($child_element instanceof Form\Payload)
+                    $this->values[$name = $child_element->getName()] = $child_element->getValue();
+        }
+        
+        $this->elements[$name] = $element;
+
+        return $this;
     }
 
     /**
      * 
      */
     public function setValue(string $name, null|int|string|array|\Closure $value = null) {
-        self::$values[$name] = $value;
+        $this->values[$name] = $value;
     }
 
     /**
@@ -72,7 +69,7 @@ class Form extends \ArrayObject {
     public function build() {
         $html = '<form ' . Form\Element::flatten($this->attributes) . '>';
 
-        foreach ($this as $element)
+        foreach ($this->elements as $name => $element)
             $html .= $element->build();
 
         $html .= '</form>';
@@ -403,6 +400,14 @@ class Input extends Payload {
 /**
  * 
  */
+class Listitem extends Payload {
+    
+};
+
+
+/**
+ * 
+ */
 class Radio extends Input {}
 
 
@@ -523,7 +528,130 @@ class File extends Input {
 /**
  * 
  */
-class FilePreview extends Input {};
+class Image extends Input {
+
+    /**
+     * 
+     */
+    public function build(): string {
+        $uqid = 'i-' . md5($this->name);
+        $no_pic = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+        $value = $this->value;
+        $attributes = $this->attributes;
+        $attributes['name'] = $this->name;
+        $attributes['value'] = $value;
+        $attributes['type'] = 'file';
+        $attributes['class'] = 'form-control';
+        $attributes['accept'] = 'image/*';
+        $attributes['multiple'] = null;
+        $attributes['onchange'] = 'return (function(event) {
+            const [file] = event.target.files;
+            const $input = $("img#uploadmark-' . $uqid . '");
+
+            if (file) {
+                $input.attr("src", window.URL.createObjectURL(file));
+                $input.on("onload", function() {
+                    window.URL.revokeObjectURL($input.attr("src"));
+                });
+
+                return true;
+            }
+
+            return $input.attr("src", "' . $no_pic . '");
+        })(event);';
+        
+        $html = '<div class="form-group">';
+
+        if (!empty($this->label))
+            $html .= '<label class="form-label">' . $this->label . '</label>';
+
+        $html .= '<div class="mb-3">';
+        $html .= '<img id="uploadmark-' . $uqid . '" src="' . ($value ?: $no_pic) . '" class="img-fluid border border-2 p-1" />';
+        $html .= '</div>';
+        $html .= '<input ' . self::flatten($attributes) . ' />';
+
+        if (!empty($this->helptext))
+            $html .= '<span class="form-text">' . $this->helptext . '</span>';
+
+        $html .= '</div>';
+
+        return $html;
+    }
+}
+
+
+/**
+ * 
+ */
+class Video extends Input {
+    
+    /**
+     * 
+     */
+    public function build(): string {
+        $uqid = 'i-' . md5($this->name);
+        $value = $this->value;
+        $attributes = $this->attributes;
+        $attributes['name'] = $this->name;
+        $attributes['value'] = $value;
+        $attributes['type'] = 'file';
+        $attributes['class'] = 'form-control';
+        $attributes['accept'] = 'video/*';
+        $attributes['multiple'] = null;
+        $attributes['onchange'] = 'return (function(event) {
+            const [file] = event.target.files;
+            const $input = $("video#uploadmark-' . $uqid . '");
+
+            if (file) {
+                $input.attr("src", window.URL.createObjectURL(file));
+                $input.on("onload", function() {
+                    window.URL.revokeObjectURL($input.attr("src"));
+                });
+
+                return true;
+            }
+
+            return $input.attr("src", "[NO FILE SELECTED]");
+        })(event);';
+        
+        $html = '<div class="form-group">';
+
+        if (!empty($this->label))
+            $html .= '<label class="form-label">' . $this->label . '</label>';
+
+        $html .= '<div class="mb-3">';
+        $html .= '<video id="uploadmark-' . $uqid . '" src="' . ($value ?: '#') . '" class="img-fluid border border-2 p-1" controls="controls">';
+        $html .= 'Your browser does not support the video tag.';
+        $html .= '</video>';
+        $html .= '</div>';
+        $html .= '<input ' . self::flatten($attributes) . ' />';
+
+        if (!empty($this->helptext))
+            $html .= '<span class="form-text">' . $this->helptext . '</span>';
+
+        $html .= '</div>';
+
+        return $html;
+    }
+};
+
+
+/**
+ * 
+ */
+class Audio extends Input {};
+
+
+/**
+ * 
+ */
+class Youtube extends Input {};
+
+
+/**
+ * 
+ */
+class GoogleMaps extends Input {};
 
 
 /**
@@ -600,5 +728,50 @@ class Selectbox extends Payload {
 /**
  * 
  */
-class Button extends Element {};
+class Button extends Element {
+
+    /**
+     * 
+     */
+    protected string $text = '';
+    protected array $attributes = [
+        'type' => 'submit',
+        'class' => 'btn btn-primary w-100',
+    ];
+
+    /**
+     * 
+     */
+    public function __construct(string $text = 'Submit', string $label = '', string $helptext = '', array $attributes = []) {
+        $this->text = $text;
+        $this->label = $label;
+        $this->helptext = $helptext;
+        $this->attributes = array_replace($this->attributes, $attributes);
+    }
+
+    /**
+     * 
+     */
+    public function build(): string {
+        $attributes = $this->attributes;
+
+        $html = '<div class="form-group">';
+
+        if (!empty($this->label))
+            $html .= '<label class="form-label">' . $this->label . '</label>';
+        
+        $html .= '<div>';
+        $html .= '<button ' . self::flatten($attributes) . '>';
+        $html .= $this->text;
+        $html .= '</button>';
+        $html .= '</div>';
+
+        if (!empty($this->helptext))
+            $html .= '<span class="form-text">' . $this->helptext . '</span>';
+
+        $html .= '</div>';
+
+        return $html;
+    }
+};
 ?>
