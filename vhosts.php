@@ -5,11 +5,11 @@
  */
 if (!file_exists(dirname($_SERVER['SCRIPT_FILENAME']) . '/.htaccess')) {
     exit(file_put_contents(dirname($_SERVER['SCRIPT_FILENAME']) . '/.htaccess', "RewriteEngine on
-    RewriteBase /
-    
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteRule !(^public/) index.php
-    RewriteRule ^public/(.*)?$ index.php?THEFOUNDATION_PUBLIC_STATIC_FILENAME=$1 [NC]"));
+RewriteBase /
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule !(^([a-zA-Z0-9\-_]*)/public/) index.php
+RewriteRule ^([a-zA-Z0-9\-_]*)/public/(.*)?$ index.php?THEFOUNDATION_PUBLIC_STATIC_FILENAME=$2 [NC]"));
 }
 
 /**
@@ -25,7 +25,7 @@ class vhost
      */
     public static function add(string $name, string $source)
     {
-        self::$hosts[$name] = $source;
+        self::$hosts[strtolower($name)] = $source;
     }
 
     /**
@@ -33,7 +33,7 @@ class vhost
      */
     public static function listen()
     {
-        $http_parts = explode('/', trim($_SERVER['REDIRECT_URL'], '/'));
+        $http_parts = explode('/', strtolower(trim($_SERVER['REDIRECT_URL'], '/')));
 
         if (!empty(self::$hosts[$http_parts[0]])) {
             $_SERVER['THEFOUNDATION_LISTEN_PREFIX'] = '/' . $http_parts[0] . '/';
