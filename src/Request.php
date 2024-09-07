@@ -3,17 +3,20 @@
 /**
  * 
  */
+
 namespace TheFoundation;
 
 /**
  * 
  */
-class Request {
+class Request
+{
 
     /**
      * 
      */
-    public static function json(string $url, array $payload = [], array $curl_options = [], \Closure $callback = null) {
+    public static function json(string $url, array $payload = [], array $curl_options = [], \Closure $callback = null)
+    {
         $curl_options = array_replace([
             CURLOPT_HTTP_VERSION    => CURL_HTTP_VERSION_1_1,
             CURLOPT_USERAGENT       => 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/536.5 (KHTML, like Gecko) Chrome/19.0.1084.56 Safari/536.5',
@@ -54,7 +57,8 @@ class Request {
     /**
      * 
      */
-    public static function html(string $url, array $payload = [], array $curl_options = [], \Closure $callback = null) {
+    public static function html(string $url, array $payload = [], array $curl_options = [], \Closure $callback = null)
+    {
         $curl_options = array_replace([
             CURLOPT_HTTP_VERSION    => CURL_HTTP_VERSION_1_1,
             CURLOPT_USERAGENT       => 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/536.5 (KHTML, like Gecko) Chrome/19.0.1084.56 Safari/536.5',
@@ -87,4 +91,3 @@ class Request {
         return $response;
     }
 }
-?>

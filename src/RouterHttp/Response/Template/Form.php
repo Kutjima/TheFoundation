@@ -3,12 +3,14 @@
 /**
  * 
  */
+
 namespace TheFoundation\RouterHttp\Response\Template;
 
 /**
  * 
  */
-class Form {
+class Form
+{
 
     /**
      * 
@@ -20,7 +22,8 @@ class Form {
     /**
      * 
      */
-    public function __construct(string $method = 'GET', string $action = '', array $attributes = []) {
+    public function __construct(string $method = 'GET', string $action = '', array $attributes = [])
+    {
         $this->attributes = array_replace($attributes, [
             'method' => $method,
             'action' => $action,
@@ -30,27 +33,29 @@ class Form {
     /**
      * 
      */
-    public function __tostring(): string {
+    public function __tostring(): string
+    {
         return $this->build();
     }
 
     /**'
      * 
      */
-    public function add(Form\Element $element): self {
+    public function add(Form\Element $element): self
+    {
         if (!$element instanceof Form\Element)
             throw new \InvalidArgumentException('Value must be an instance of "Form\Element"');
-        
+
         $name = random_bytes(20);
 
         if ($element instanceof Form\Payload)
             $this->values[$name = $element->getName()] = $element->getValue();
-        else if ($element instanceof Form\Fieldset || $element instanceof Form\Inline) {            
+        else if ($element instanceof Form\Fieldset || $element instanceof Form\Inline) {
             foreach ($element->children() as $child_element)
                 if ($child_element instanceof Form\Payload)
                     $this->values[$name = $child_element->getName()] = $child_element->getValue();
         }
-        
+
         $this->elements[$name] = $element;
 
         return $this;
@@ -59,14 +64,16 @@ class Form {
     /**
      * 
      */
-    public function setValue(string $name, null|int|string|array|\Closure $value = null) {
+    public function setValue(string $name, null|int|string|array|\Closure $value = null)
+    {
         $this->values[$name] = $value;
     }
 
     /**
      * 
      */
-    public function build() {
+    public function build()
+    {
         $html = '<form ' . Form\Element::flatten($this->attributes) . '>';
 
         foreach ($this->elements as $name => $element)
@@ -80,17 +87,18 @@ class Form {
     /**
      * 
      */
-    public static function sanitizeDataPosted(array $data): array {
-        foreach($data as $k => $v) {
+    public static function sanitizeDataPosted(array $data): array
+    {
+        foreach ($data as $k => $v) {
             if (is_array($data[$k]))
                 $data[$k] = self::sanitizeDataPosted($data[$k]);
             else if (is_string($data[$k]) && (($data[$k] = trim($data[$k]))) == '')
                 $data[$k] = null;
-    
+
             if (is_numeric($data[$k]) || is_int($data[$k]))
                 $data[$k] = (int) $data[$k];
         }
-    
+
         return $data;
     }
 }
@@ -99,13 +107,15 @@ class Form {
 /**
  * 
  */
+
 namespace TheFoundation\RouterHttp\Response\Template\Form;
 
 
 /**
  * 
  */
-abstract class Element {
+abstract class Element
+{
 
     /**
      * 
@@ -117,7 +127,8 @@ abstract class Element {
     /**
      * 
      */
-    public function __construct(string $label = '', string $helptext = '', array $attributes = []) {
+    public function __construct(string $label = '', string $helptext = '', array $attributes = [])
+    {
         $this->label = $label;
         $this->helptext = $helptext;
         $this->attributes = array_replace($this->attributes, $attributes);
@@ -126,15 +137,17 @@ abstract class Element {
     /**
      * 
      */
-    public function __toString(): string {
+    public function __toString(): string
+    {
         return $this->build();
     }
 
     /**
      * 
      */
-    static public function flatten(array $attributes): string {
-        return implode(' ', array_map(function($key, $value) {
+    static public function flatten(array $attributes): string
+    {
+        return implode(' ', array_map(function ($key, $value) {
             if (!is_null($value))
                 return sprintf('%s="%s"', htmlspecialchars($key), htmlspecialchars($value));
 
@@ -145,7 +158,8 @@ abstract class Element {
     /**
      * 
      */
-    public function build(): string {
+    public function build(): string
+    {
         throw new \Exception('Not implemented');
     }
 };
@@ -154,7 +168,8 @@ abstract class Element {
 /**
  * 
  */
-class Blank extends Element {
+class Blank extends Element
+{
 
     /**
      * 
@@ -164,14 +179,16 @@ class Blank extends Element {
     /**
      * 
      */
-    public function __construct(string|Element $html = '', array $attributes = []) {
+    public function __construct(string|Element $html = '', array $attributes = [])
+    {
         $this->attributes = array_replace($attributes, $this->attributes);
     }
 
     /**
      * 
      */
-    public function build(): string {
+    public function build(): string
+    {
         return '<div ' . self::flatten($this->attributes) . '>' . $this->html . '</div>';
     }
 };
@@ -179,7 +196,8 @@ class Blank extends Element {
 /**
  * 
  */
-class Text extends Element {
+class Text extends Element
+{
 
     /**
      * 
@@ -189,7 +207,8 @@ class Text extends Element {
     /**
      * 
      */
-    public function __construct(string $text, array $attributes = []) {
+    public function __construct(string $text, array $attributes = [])
+    {
         $this->text = $text;
         $this->attributes = array_replace($this->attributes, $attributes);
     }
@@ -197,7 +216,8 @@ class Text extends Element {
     /**
      * 
      */
-    public function build(): string {
+    public function build(): string
+    {
         $this->attributes['class'] = 'form-text';
 
         return '<span ' . self::flatten($this->attributes) . '>' . $this->text . '</span>';
@@ -208,7 +228,8 @@ class Text extends Element {
 /**
  * 
  */
-class Fieldset extends Element {
+class Fieldset extends Element
+{
 
     /**
      * 
@@ -220,7 +241,8 @@ class Fieldset extends Element {
     /**
      * 
      */
-    public function __construct(string $legend = '', string $description = '', array $attributes = []) {
+    public function __construct(string $legend = '', string $description = '', array $attributes = [])
+    {
         $this->legend = $legend;
         $this->description = $description;
         $this->attributes = $attributes;
@@ -229,21 +251,24 @@ class Fieldset extends Element {
     /**
      * 
      */
-    public function add(Element $element) {
+    public function add(Element $element)
+    {
         $this->elements[] = $element;
     }
 
     /**
      * 
      */
-    public function children(): array {
+    public function children(): array
+    {
         return $this->elements;
     }
 
     /**
      * 
      */
-    public function build(): string {
+    public function build(): string
+    {
         $html = '<fieldset ' . self::flatten($this->attributes) . '>';
 
         if (!empty($this->legend))
@@ -251,7 +276,7 @@ class Fieldset extends Element {
 
         if (!empty($this->description))
             $html .= '<p class="text-muted">' . $this->description . '</p>';
-        
+
         foreach ($this->elements as $element)
             $html .= $element->build();
 
@@ -265,7 +290,8 @@ class Fieldset extends Element {
 /**
  * 
  */
-class Inline extends Element {
+class Inline extends Element
+{
 
     /**
      * 
@@ -275,7 +301,8 @@ class Inline extends Element {
     /**
      * 
      */
-    public function __construct(string $label = '', string $helptext = '', array $attributes = []) {
+    public function __construct(string $label = '', string $helptext = '', array $attributes = [])
+    {
         $this->label = $label;
         $this->helptext = $helptext;
         $this->attributes = $attributes;
@@ -284,21 +311,24 @@ class Inline extends Element {
     /**
      * 
      */
-    public function add(Element $element, string $colsize = 'col-auto') {
+    public function add(Element $element, string $colsize = 'col-auto')
+    {
         $this->elements[] = [$element, $colsize];
     }
 
     /**
      * 
      */
-    public function children(): array {
+    public function children(): array
+    {
         return array_map(fn($e) => $e[0], $this->elements);
     }
 
     /**
      * 
      */
-    public function build(): string {
+    public function build(): string
+    {
         $html = '<div class="form-group">';
 
         if (!empty($this->label))
@@ -308,7 +338,7 @@ class Inline extends Element {
             $html .= '<p class="text-muted">' . $this->helptext . '</p>';
 
         $html .= '<div class="row align-items-center">';
-        
+
         foreach ($this->elements as $element)
             $html .= '<div class="' . $element[1] . '">' . $element[0]->build() . '</div>';
 
@@ -323,7 +353,8 @@ class Inline extends Element {
 /**
  * 
  */
-abstract class Payload extends Element {
+abstract class Payload extends Element
+{
 
     /**
      * 
@@ -335,7 +366,8 @@ abstract class Payload extends Element {
     /**
      * 
      */
-    public function __construct(string $name, null|int|string|array|\Closure $value = null, string $label = '', string $helptext = '', array $options = [], array $attributes = []) {
+    public function __construct(string $name, null|int|string|array|\Closure $value = null, string $label = '', string $helptext = '', array $options = [], array $attributes = [])
+    {
         $this->name = $name;
         $this->value = $value;
         $this->options = $options;
@@ -347,21 +379,24 @@ abstract class Payload extends Element {
     /**
      * 
      */
-    public function getName(): string {
+    public function getName(): string
+    {
         return $this->name;
     }
 
     /**
      * 
      */
-    public function getValue(): null|int|string|array|\Closure {
+    public function getValue(): null|int|string|array|\Closure
+    {
         return $this->value;
     }
 
     /**
      * 
      */
-    public function build(): string {
+    public function build(): string
+    {
         $value = $this->value;
         $attributes = $this->attributes;
         $attributes['name'] = $this->name;
@@ -388,7 +423,8 @@ abstract class Payload extends Element {
 /**
  * 
  */
-class Input extends Payload {
+class Input extends Payload
+{
 
     /**
      * 
@@ -400,9 +436,7 @@ class Input extends Payload {
 /**
  * 
  */
-class Listitem extends Payload {
-    
-};
+class Listitem extends Payload {};
 
 
 /**
@@ -414,7 +448,8 @@ class Radio extends Input {}
 /**
  * 
  */
-class Checkbox extends Input {
+class Checkbox extends Input
+{
 
     /**
      * 
@@ -424,13 +459,14 @@ class Checkbox extends Input {
     /**
      * 
      */
-    public function build(): string {
+    public function build(): string
+    {
         $value = $this->value;
         $attributes = $this->attributes;
         $attributes['type'] = 'checkbox';
         $attributes['name'] = $this->name;
         $attributes['class'] = 'form-check-input';
-        
+
         $html = '<div class="form-group">';
 
         if (!empty($this->label))
@@ -462,7 +498,8 @@ class Checkbox extends Input {
 /**
  * 
  */
-class Switchbox extends Checkbox {
+class Switchbox extends Checkbox
+{
 
     /**
      * 
@@ -474,12 +511,14 @@ class Switchbox extends Checkbox {
 /**
  * 
  */
-class File extends Input {
+class File extends Input
+{
 
     /**
      * 
      */
-    public function build(): string {
+    public function build(): string
+    {
         $uqid = 'i-' . md5($this->name);
         $value = $this->value;
         $attributes = $this->attributes;
@@ -497,7 +536,7 @@ class File extends Input {
 
             $("span#uploadmark-' . $uqid . '").html(l.join(", "));
         })(event);';
-        
+
         $html = '<div class="form-group">';
 
         if (!empty($this->label))
@@ -506,12 +545,12 @@ class File extends Input {
         $html .= '<input ' . self::flatten($attributes) . ' />';
         $html .= '<div class="mt-1">';
         $html .= '<small class="help-text">';
-        
+
         if ($value)
             $html .= '<a href="' . $value . '" target="_blank">' . basename($value) . '</a>';
         else
             $html .= '[NO FILE PREVIOUSLY UPLOADED]';
-        
+
         $html .= ' &rarr; <span id="uploadmark-' . $uqid . '">[WILL NOT CHANGE]</span></small>';
         $html .= '</div>';
 
@@ -528,12 +567,14 @@ class File extends Input {
 /**
  * 
  */
-class Image extends Input {
+class Image extends Input
+{
 
     /**
      * 
      */
-    public function build(): string {
+    public function build(): string
+    {
         $uqid = 'i-' . md5($this->name);
         $no_pic = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
         $value = $this->value;
@@ -559,7 +600,7 @@ class Image extends Input {
 
             return $input.attr("src", "' . $no_pic . '");
         })(event);';
-        
+
         $html = '<div class="form-group">';
 
         if (!empty($this->label))
@@ -583,12 +624,14 @@ class Image extends Input {
 /**
  * 
  */
-class Video extends Input {
-    
+class Video extends Input
+{
+
     /**
      * 
      */
-    public function build(): string {
+    public function build(): string
+    {
         $uqid = 'i-' . md5($this->name);
         $value = $this->value;
         $attributes = $this->attributes;
@@ -613,7 +656,7 @@ class Video extends Input {
 
             return $input.attr("src", "[NO FILE SELECTED]");
         })(event);';
-        
+
         $html = '<div class="form-group">';
 
         if (!empty($this->label))
@@ -657,12 +700,14 @@ class GoogleMaps extends Input {};
 /**
  * 
  */
-class Textarea extends Payload {
-    
+class Textarea extends Payload
+{
+
     /**
      * 
      */
-    public function build(): string {
+    public function build(): string
+    {
         $attributes = $this->attributes;
         $attributes['name'] = $this->name;
         $attributes['class'] = 'form-control';
@@ -671,7 +716,7 @@ class Textarea extends Payload {
 
         if (!empty($this->label))
             $html .= '<label class="form-label">' . $this->label . '</label>';
-        
+
         $html .= '<textarea ' . self::flatten($attributes) . '>' . $this->value . '</textarea>';
 
         if (!empty($this->helptext))
@@ -687,12 +732,14 @@ class Textarea extends Payload {
 /**
  * 
  */
-class Selectbox extends Payload {
+class Selectbox extends Payload
+{
 
     /**
      * 
      */
-    public function build(): string {
+    public function build(): string
+    {
         $value = $this->value;
         $attributes = $this->attributes;
         $attributes['name'] = $this->name;
@@ -702,15 +749,15 @@ class Selectbox extends Payload {
 
         if (!empty($this->label))
             $html .= '<label class="form-label">' . $this->label . '</label>';
-        
+
         $html .= '<select ' . self::flatten($attributes) . '>';
-        
+
         foreach ($this->options as $opt_value => $opt_label) {
             $opt_attributes['value'] = $opt_value;
 
             if (in_array($opt_value, (array) $value))
                 $opt_attributes['selected'] = 1;
-            
+
             $html .= '<option ' . self::flatten($opt_attributes) . ' >' . $opt_label . '</label>';
         }
 
@@ -728,7 +775,8 @@ class Selectbox extends Payload {
 /**
  * 
  */
-class Button extends Element {
+class Button extends Element
+{
 
     /**
      * 
@@ -742,7 +790,8 @@ class Button extends Element {
     /**
      * 
      */
-    public function __construct(string $text = 'Submit', string $label = '', string $helptext = '', array $attributes = []) {
+    public function __construct(string $text = 'Submit', string $label = '', string $helptext = '', array $attributes = [])
+    {
         $this->text = $text;
         $this->label = $label;
         $this->helptext = $helptext;
@@ -752,14 +801,15 @@ class Button extends Element {
     /**
      * 
      */
-    public function build(): string {
+    public function build(): string
+    {
         $attributes = $this->attributes;
 
         $html = '<div class="form-group">';
 
         if (!empty($this->label))
             $html .= '<label class="form-label">' . $this->label . '</label>';
-        
+
         $html .= '<div>';
         $html .= '<button ' . self::flatten($attributes) . '>';
         $html .= $this->text;
@@ -774,4 +824,3 @@ class Button extends Element {
         return $html;
     }
 };
-?>

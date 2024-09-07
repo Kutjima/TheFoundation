@@ -3,12 +3,14 @@
 /**
  * 
  */
+
 namespace TheFoundation;
 
 /**
  * 
  */
-class PDOFactory {
+class PDOFactory
+{
 
     /**
      * @param \PDO $PDO - instance of PDO
@@ -27,7 +29,8 @@ class PDOFactory {
      * @return bool
      * @throws \PDOException
      */
-    public static function inidb(\PDO $PDO, array $struct): bool {
+    public static function inidb(\PDO $PDO, array $struct): bool
+    {
         $query_string = [];
 
         foreach ($struct as $table => $details) {
@@ -36,7 +39,7 @@ class PDOFactory {
 
             foreach ($details['columns'] as $name => $type)
                 $columns[] = sprintf('`%s` %s', $name, $type);
-            
+
             $query_string[] = "\t" . implode(",\n\t", array_merge($columns, $details['constraints']));
             $query_string[] = ');';
         }
@@ -60,7 +63,8 @@ class PDOFactory {
      * @return optional PDOStatement
      * @throws PDOException
      */
-    public static function upsert(\PDO $PDO, string $table, array $columns, array $constraints = []): ?\PDOStatement {
+    public static function upsert(\PDO $PDO, string $table, array $columns, array $constraints = []): ?\PDOStatement
+    {
         $scolumns = implode(', ', $columns);
         $placeholders = str_repeat('?, ', count($columns) - 1) . '?';
         $sconstraints = implode(', ', $constraints);
@@ -68,29 +72,30 @@ class PDOFactory {
 
         $query_string = empty($constraints)
             ? sprintf('INSERT INTO %s (%s) VALUES (%s);', $table, $scolumns, $placeholders)
-                : sprintf('INSERT INTO %s (%s) VALUES (%s) ON CONFLICT(%s) DO UPDATE SET %s;', $table, $scolumns, $placeholders, $sconstraints, $update_set);
+            : sprintf('INSERT INTO %s (%s) VALUES (%s) ON CONFLICT(%s) DO UPDATE SET %s;', $table, $scolumns, $placeholders, $sconstraints, $update_set);
 
         if ($stmt = $PDO->prepare($query_string))
             return $stmt;
-        
+
         return null;
     }
 
     /**
      * 
      */
-    public static function SQLite(string $database, array $options = []): \PDO {
-        $PDO = new \PDO(sprintf('sqlite:%s/persistences/%s', APPLICATION_PATH, $database), '', '', array_replace([
+    public static function SQLite(string $database, array $options = []): \PDO
+    {
+        $PDO = new \PDO('sqlite:' . $database, '', '', array_replace([
             \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_OBJ,
             \PDO::ATTR_EMULATE_PREPARES => true,
             \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
             \PDO::ATTR_PERSISTENT => false,
         ], $options));
 
-        $PDO->sqliteCreateFunction('json_value', function(string $json_string, string $json_path) {
+        $PDO->sqliteCreateFunction('json_value', function (string $json_string, string $json_path) {
             $json_data = @json_decode($json_string, \JSON_OBJECT_AS_ARRAY);
 
-            foreach(explode('->', $json_path) as $index_name) {
+            foreach (explode('->', $json_path) as $index_name) {
                 if (!is_array($json_data) || !isset($json_data[$index_name]))
                     return null;
 
@@ -100,10 +105,10 @@ class PDOFactory {
             return is_array($json_data) ? json_encode($json_data) : $json_data;
         });
 
-        $PDO->sqliteCreateFunction('json_contains', function(string $json_string, string $json_path, string ...$search_values) {
+        $PDO->sqliteCreateFunction('json_contains', function (string $json_string, string $json_path, string ...$search_values) {
             $json_data = @json_decode($json_string, \JSON_OBJECT_AS_ARRAY);
 
-            foreach($json_path ? explode('->', $json_path) : [] as $index_name) {
+            foreach ($json_path ? explode('->', $json_path) : [] as $index_name) {
                 if (!is_array($json_data) || !isset($json_data[$index_name]))
                     return 0;
 
@@ -117,10 +122,10 @@ class PDOFactory {
             return 0;
         });
 
-        $PDO->sqliteCreateFunction('json_contains_all', function(string $json_string, string $json_path, string ...$search_values) {
+        $PDO->sqliteCreateFunction('json_contains_all', function (string $json_string, string $json_path, string ...$search_values) {
             $json_data = @json_decode($json_string, \JSON_OBJECT_AS_ARRAY);
 
-            foreach($json_path ? explode('->', $json_path) : [] as $index_name) {
+            foreach ($json_path ? explode('->', $json_path) : [] as $index_name) {
                 if (!is_array($json_data) || !isset($json_data[$index_name]))
                     return 0;
 
@@ -130,12 +135,11 @@ class PDOFactory {
             $nb = 0;
             foreach ($search_values as $search_value)
                 if (in_array($search_value, (array) $json_data))
-                    $nb ++;
+                    $nb++;
 
             return $nb >= count($search_values);
         });
-        
+
         return $PDO;
     }
 }
-?>
