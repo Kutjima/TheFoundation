@@ -1,9 +1,0 @@
-RewriteEngine on
-RewriteBase /skeleton_webapp/
-
-SetEnv THEFOUNDATION_LISTEN_PREFIX "/skeleton_webapp/"
-SetEnv THEFOUNDATION_SOURCE_DIRECTORY "/path/to/skeleton_webapp/src"
-
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteRule !(^public/) index.php
-RewriteRule ^public/(.*)?$ index.php?THEFOUNDATION_PUBLIC_STATIC_FILENAME=$1 [NC]
