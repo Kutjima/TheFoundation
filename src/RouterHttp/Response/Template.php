@@ -23,7 +23,7 @@ class Template
      */
     final public function __construct(string $document, array $attributes = [])
     {
-        $this->document = sprintf('%s/htdocs/%s', APPLICATION_PATH, $document);
+        $this->document = $document;
         $this->attributes = $attributes;
     }
 
